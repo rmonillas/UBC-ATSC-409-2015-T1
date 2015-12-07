@@ -1,5 +1,5 @@
 ###############################################################################
-# ATSC 409Assignment 06 Problem Experiment
+# BIOL 301 Bieber Fever
 ###############################################################################
 
 from numlabs.lab5.lab5_funs import Integrator
@@ -7,10 +7,8 @@ from collections import namedtuple
 import numpy as np
 from matplotlib import pyplot as plt
 plt.style.use('ggplot')
-
 import warnings
 warnings.simplefilter(action = "ignore", category = FutureWarning)
-from mpl_toolkits.mplot3d import Axes3D
 
 
 class Integ61(Integrator):
@@ -42,47 +40,25 @@ class Integ61(Integrator):
             self.config['timevars'].update(timevars)
         timevars = namedtuple('timevars', self.config['timevars'].keys())
         self.timevars = timevars(**self.config['timevars'])
-        self.yinit = np.array([self.initvars.x, self.initvars.y, self.initvars.z])
+        self.yinit = np.array([self.initvars.x, self.initvars.y])
         self.nvars = len(self.yinit)
     
     def derivs5(self, coords, t):
-        x,y,z = coords
-        u=self.uservars
-        f=np.empty_like(coords)
-        f[0] = u.sigma * (y - x)
-        f[1] = x * (u.rho - z) - y
-        f[2] = x * y - u.beta * z
+        x,y = coords
+        u = self.uservars
+        f = np.empty_like(coords)
+        f[0] = (-1*u.n2-u.b-u.p1-u.p2)*x + (u.n1-u.p2)*y + u.p2
+        f[1] = (u.b+u.p1)*x + (-1*u.n1-u.c)*y
         return f
         
 
-def plot_3d(ax,xvals,vals,zvals):
-    """
-        plot a 3-d trajectory with start and stop markers
-    """
-    line,=ax.plot(xvals,yvals,zvals,'r-')
-    ax.set_xlim((-20, 20))
-    ax.set_ylim((-30, 30))
-    ax.set_zlim((5, 55))
-    ax.grid(True)
-    #
-    # look down from 30 degree elevation and an azimuth of
-    #
-    ax.view_init(30,5)
-    line,=ax.plot(xvals,yvals,zvals,'r-')
-    ax.plot([-20,15],[-30,-30],[0,0],'k-')
-    ax.scatter(xvals[0],yvals[0],zvals[0],marker='o',c='green',s=75)
-    ax.scatter(xvals[-1],yvals[-1],zvals[-1],marker='^',c='blue',s=75)
-    ax.set(xlabel='x',ylabel='y',zlabel='z')
-    line.set(alpha=0.2)
-    return ax
-    
 
 #
 # make a nested dictionary to hold parameters
 #
-timevars=dict(tstart=0,tend=27,dt=0.01)
-uservars=dict(sigma=10,beta=2.6666,rho=28)
-initvars=dict(x=5,y=5,z=5)
+timevars=dict(tstart=0,tend=100,dt=0.01)
+uservars=dict(b=0.5, c=0.2, n1=0.4, n2=0.5, p1=0.3, p2=0.9)
+initvars=dict(x=1,y=0)
 params=dict(timevars=timevars,uservars=uservars,initvars=initvars)
 #
 # expand the params dictionary into key,value pairs for
@@ -90,20 +66,13 @@ params=dict(timevars=timevars,uservars=uservars,initvars=initvars)
 #
 theSolver = Integ61('lorenz.yaml',**params)
 timevals, coords, errorlist = theSolver.timeloop5fixed()
-xvals,yvals,zvals=coords[:,0],coords[:,1],coords[:,2]
+xvals,yvals=coords[:,0],coords[:,1]
 
-
-fig = plt.figure(figsize=(6,6))
-ax = fig.add_axes([0, 0, 1, 1], projection='3d')
-ax=plot_3d(ax,xvals,yvals,zvals)
-out=ax.set(title='starting point: {},{},{}'.format(*coords[0,:]))
-#help(ax.view_init)
 
 
 
 fig,ax = plt.subplots(1,1,figsize=(8,6))
 ax.plot(timevals,xvals,label='x')
 ax.plot(timevals,yvals,label='y')
-ax.plot(timevals,zvals,label='z')
-ax.set(title='x, y, z for trajectory',xlabel='time')
+ax.set(title='x, y for trajectory',xlabel='time')
 out=ax.legend()
